@@ -2,11 +2,13 @@ package brick.query.tester;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
 import lucenecheck.ClassResultRankMgr;
 import lucenecheck.LuceneSearcher;
 import utility.ContentLoader;
+import utility.GoldsetLoader;
 
-public class BRICKPerformanceCalc {
+public class BLIZZARDResultProvider {
 
 	String repoName;
 	int TOPK;
@@ -19,18 +21,10 @@ public class BRICKPerformanceCalc {
 	double mrrK;
 	double mrK;
 
-	public BRICKPerformanceCalc(String repoName, int TOPK,
-			ArrayList<String> queries) {
+	public BLIZZARDResultProvider(String repoName, int TOPK, String queryFile) {
 		this.repoName = repoName;
 		this.TOPK = TOPK;
-		this.queryMap = extractQueriesFromMemory(queries);
-	}
-
-	public BRICKPerformanceCalc(String repoName, int TOPK,
-			HashMap<Integer, String> queryMap) {
-		this.repoName = repoName;
-		this.TOPK = TOPK;
-		this.queryMap = queryMap;
+		this.queryMap = extractQueryMap(queryFile);
 	}
 
 	protected String extractQuery(String line) {
@@ -42,20 +36,9 @@ public class BRICKPerformanceCalc {
 		return temp.trim();
 	}
 
-	protected HashMap<Integer, String> extractQueriesFromMemory(
-			ArrayList<String> qlines) {
-		HashMap<Integer, String> tempMap = new HashMap<>();
-		for (String line : qlines) {
-			int bugID = Integer.parseInt(line.split("\\s+")[0]);
-			String myquery = extractQuery(line);
-			tempMap.put(bugID, myquery);
-		}
-		return tempMap;
-	}
-	
-	protected HashMap<Integer, String> extractQueryMap() {
+	protected HashMap<Integer, String> extractQueryMap(String queryFile) {
 		// extracting queries
-		ArrayList<String> lines = ContentLoader.getAllLinesList(this.queryFile);
+		ArrayList<String> lines = ContentLoader.getAllLinesList(queryFile);
 		HashMap<Integer, String> queryMap = new HashMap<>();
 		for (String line : lines) {
 			String query = extractQuery(line);
@@ -107,19 +90,38 @@ public class BRICKPerformanceCalc {
 		return (double) foundIndices.size() / goldset.size();
 	}
 
-	public void calculateBRICKPerformance() {
-		double sumRR = 0;
-		double sumAP = 0;
-		double sumRec = 0;
-		double sumAcc = 0;
-
+	public HashMap<Integer, ArrayList<String>> collectBLIZZARDResults() {
+		// collect BLIZZARD results
+		System.out.println("Collection of results started. Please wait..");
+		HashMap<Integer, ArrayList<String>> resultMap = new HashMap<>();
 		for (int bugID : this.queryMap.keySet()) {
 			String singleQuery = this.queryMap.get(bugID);
-			LuceneSearcher searcher = new LuceneSearcher(bugID, repoName,singleQuery);
-			// setting TOP-K values
-			searcher.TOPK_RESULTS = TOPK;
+			LuceneSearcher searcher = new LuceneSearcher(bugID, repoName,
+					singleQuery);
+			ArrayList<String> ranked = searcher.performVSMSearchList(false);
+			resultMap.put(bugID, ranked);
+		}
+		System.out.println("Localization results collected successfully :-)");
+		return resultMap;
+	}
+
+	public void calculateBLIZZARDPerformance(
+			HashMap<Integer, ArrayList<String>> resultMap) {
+		double sumRR = 0;
+		double sumAP = 0;
+		double sumAcc = 0;
+		System.out.println("Bug Localization Performance:");
+
+		for (int bugID : resultMap.keySet()) {
+			ArrayList<String> results = resultMap.get(bugID);
+			ArrayList<String> goldset = GoldsetLoader.goldsetLoader(repoName,
+					bugID);
+			ClassResultRankMgr clsRankMgr = new ClassResultRankMgr(repoName,
+					results, goldset);
+			ArrayList<Integer> indices = clsRankMgr.getCorrectRanksDotted(TOPK);
+
 			double rr = 0, ap = 0, rec = 0;
-			ArrayList<Integer> indices = searcher.getGoldFileIndicesClass();
+
 			if (!indices.isEmpty()) {
 				rr = getRR(indices);
 				if (rr > 0) {
@@ -130,20 +132,20 @@ public class BRICKPerformanceCalc {
 					sumAP += ap;
 					sumAcc++;
 				}
-				rec = getRecall(indices, searcher.goldset);
-				if (rec > 0) {
-					sumRec += rec;
-				}
 			}
 		}
 
 		// now calculate the mean performance
-		this.TopkAcc = (double) sumAcc / this.queryMap.size();
-		this.mrrK = sumRR / this.queryMap.size();
-		this.mapK = sumAP / this.queryMap.size();
-		this.mrK = sumRec / this.queryMap.size();
+		this.TopkAcc = (double) sumAcc / resultMap.size();
+		this.mrrK = sumRR / resultMap.size();
+		this.mapK = sumAP / resultMap.size();
 
 		// System.out.println(repoName + " " + this.TopkAcc);
+
+		System.out.println("System: " + repoName);
+		System.out.println("Hit@" + TOPK + " Accuracy: " + this.getTopKAcc());
+		System.out.println("MRR@" + TOPK + ": " + this.getMRRK());
+		System.out.println("MAP@" + TOPK + ": " + this.getMAPK());
 
 		// clear the key map file
 		ClassResultRankMgr.keyMap.clear();
@@ -168,5 +170,10 @@ public class BRICKPerformanceCalc {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
+		String repoName = "ecf";
+		String queryFile = "./input/query.txt";
+		int TOPK = 10;
+		// System.out.println(new BLIZZARDResultProvider(repoName, TOPK,
+		// queryFile).collectBLIZZARDResults());
 	}
 }

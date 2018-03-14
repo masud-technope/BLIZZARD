@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+
 import coderank.query.expansion.CodeRankQueryExpansionProvider;
 import config.StaticData;
 import lucenecheck.LuceneSearcher;
@@ -23,7 +24,15 @@ public class TextKeywordSelector {
 	String bugDesc;
 	int TOPK;
 	String repoName;
+	HashMap<String, ArrayList<String>> adjacentMapBR;
+	HashMap<String, ArrayList<String>> adjacentMapSRC;
 
+	public TextKeywordSelector(String repoName, String title, String bugDesc, int TOPK, boolean otherMethod) {
+		this.repoName=repoName;
+		this.title = title;
+		this.bugDesc = bugDesc;
+		this.TOPK = TOPK;
+	}
 
 	public TextKeywordSelector(String repoName, String title, String bugDesc,
 			int TOPK) {
@@ -32,7 +41,18 @@ public class TextKeywordSelector {
 		this.bugDesc = bugDesc;
 		this.TOPK = TOPK;
 	}
-	
+
+	public TextKeywordSelector(String repoName, String title, String bugDesc,
+			int TOPK, HashMap<String, ArrayList<String>> adjacentMapBR,
+			HashMap<String, ArrayList<String>> adjacentMapSRC) {
+		this.repoName = repoName;
+		this.title = title;
+		this.bugDesc = bugDesc;
+		this.TOPK = TOPK;
+		this.adjacentMapBR = adjacentMapBR;
+		this.adjacentMapSRC = adjacentMapSRC;
+	}
+
 	@Deprecated
 	protected ArrayList<String> performSanitization(ArrayList<String> terms) {
 		// perform some sanitization on the query
@@ -84,7 +104,6 @@ public class TextKeywordSelector {
 		return refined;
 	}
 
-	@Deprecated
 	public ArrayList<String> getSearchTerms() {
 		SearchTermProvider keywordProvider = new SearchTermProvider(this.title,
 				this.bugDesc, TOPK, false);
@@ -100,7 +119,16 @@ public class TextKeywordSelector {
 				}
 			}
 		}
-		
+
+		// ArrayList<String> extBR = getComplementaryWords(keywords,
+		// adjacentMapBR);
+		// ArrayList<String> extSRC = getComplementaryWords(keywords,
+		// adjacentMapSRC);
+		// keywords.addAll(extBR);
+		// keywords.addAll(extSRC);
+
+		// keywords=refineTokens(keywords);
+
 		return keywords;
 	}
 
@@ -122,7 +150,6 @@ public class TextKeywordSelector {
 		
 	}
 
-	
 	protected ArrayList<String> getMiniCorpus(ArrayList<String> results) {
 		ArrayList<String> corpusLines = new ArrayList<>();
 		for (String fileURL : results) {
@@ -151,7 +178,6 @@ public class TextKeywordSelector {
 		return candidates;
 	}
 
-	@Deprecated
 	public ArrayList<String> getSearchTermsWithRF() {
 		SearchTermProvider keywordProvider = new SearchTermProvider(this.title,
 				this.bugDesc, TOPK, false);
@@ -200,6 +226,7 @@ public class TextKeywordSelector {
 		return extension;
 		// candidates;
 	}
+
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

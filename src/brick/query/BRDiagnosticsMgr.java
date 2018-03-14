@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import bug.report.classification.BugReportClassifier;
 import utility.ContentLoader;
 import config.StaticData;
 
@@ -12,23 +12,15 @@ public class BRDiagnosticsMgr {
 
 	String repoName;
 	int bugID;
-	String reportGroup;
+	String reportGroup = "NL";
 	String reportContent;
-	TraceElemExtractor teExtractor = null;
+	ArrayList<String> traces;
 
-	public BRDiagnosticsMgr(String repoName, int bugID, String reportGroup,
-			String reportContent) {
+	public BRDiagnosticsMgr(String repoName, int bugID, String reportContent) {
 		this.repoName = repoName;
 		this.bugID = bugID;
-		this.reportGroup = reportGroup;
+		this.traces = new ArrayList<>();
 		this.reportContent = reportContent;
-	}
-
-	public BRDiagnosticsMgr(String repoName, int bugID, String reportGroup) {
-		this.repoName = repoName;
-		this.bugID = bugID;
-		this.reportGroup = reportGroup;
-		this.reportContent = getBugReport(repoName, bugID);
 	}
 
 	protected String getTitle() {
@@ -44,25 +36,8 @@ public class BRDiagnosticsMgr {
 		return temp.trim();
 	}
 
-	protected ArrayList<String> getTheTraces(String reportDesc) {
-		// check for stack traces
-		ArrayList<String> traces = new ArrayList<>();
-		String stackRegex = "(.*)?(.+)\\.(.+)\\((.+)\\.java:\\d+|unknown source|native method\\)";
-		Pattern p = Pattern.compile(stackRegex);
-		Matcher m = p.matcher(reportDesc);
-		while (m.find()) {
-			String trace = reportDesc.substring(m.start(), m.end());
-			// avoid duplication
-			if (!traces.contains(trace)) {
-				traces.add(trace);
-			}
-		}
-		return traces;
-	}
-	
-	
-	protected ArrayList<String> getTheTracesV2() {
-		String traceFile = StaticData.BRICK_EXP + "/BR-ST-StackTraces/"
+	public ArrayList<String> getTheTracesLocal() {
+		String traceFile = StaticData.BRICK_EXP + "/laura-moreno/stacktraces/"
 				+ repoName + "/" + bugID + ".txt";
 		ArrayList<String> traces = ContentLoader.getAllLinesList(traceFile);
 		return traces;
@@ -85,24 +60,15 @@ public class BRDiagnosticsMgr {
 		}
 		return exceptions;
 	}
-	
 
-	public void performDiagnosis() {
-		String title = getTitle();
-		String description = getDescription();
-		// ArrayList<String> traces = getTheTraces(description);
-		ArrayList<String> traces = getTheTracesV2();
-		System.out.println(title);
-		// MiscUtility.showList(traces);
-		teExtractor = new TraceElemExtractor(traces);
-		teExtractor.decodeTraces(false);
-		System.out.println(getExceptionMessages(description));
-	}
-
-	protected static String getBugReport(String repoName, int bugID) {
-		String brFile = StaticData.BRICK_EXP + "/BugReport-Raw/" + repoName
-				+ "/" + bugID + ".txt";
-		return ContentLoader.loadFileContent(brFile);
+	protected String getReportClass() {
+		BugReportClassifier classifier = new BugReportClassifier(
+				this.reportContent);
+		String rClass = classifier.determineReportClass();
+		if (rClass.equals("ST")) {
+			this.traces = classifier.getTraces();
+		}
+		return rClass;
 	}
 
 	public static void main(String[] args) {
@@ -110,9 +76,6 @@ public class BRDiagnosticsMgr {
 		String repoName = "ecf";
 		int bugID = 326221;
 		String rg = "ST";
-		//String STKey = "C";
-		String reportContent = getBugReport(repoName, bugID);
-		new BRDiagnosticsMgr(repoName, bugID, rg, reportContent)
-				.performDiagnosis();
+		// String STKey = "C";
 	}
 }

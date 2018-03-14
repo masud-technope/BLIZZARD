@@ -2,9 +2,13 @@ package brick.query;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+
 import org.jgraph.graph.DefaultEdge;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
+
+import config.StaticData;
+import stopwords.StopWordManager;
 import utility.MiscUtility;
 
 public class TraceElemExtractor {
@@ -54,6 +58,8 @@ public class TraceElemExtractor {
 		String prevClass = new String();
 		String prevMethod = new String();
 
+		int tcount = 0;
+
 		for (String line : this.traces) {
 			String[] parts = line.split("\\.");
 			int length = parts.length;
@@ -102,17 +108,14 @@ public class TraceElemExtractor {
 			this.packages.add(packageName);
 
 			// record the dependencies
-			if (!methodGraph.containsVertex(methodName)) {
-				methodGraph.addVertex(methodName);
-				if (!prevMethod.isEmpty()) {
-					if (!methodGraph.containsEdge(methodName, prevMethod)) {
-						this.methodGraph.addEdge(methodName, prevMethod);
-					}
-				}
-				prevMethod = methodName;
-			}
+			/*
+			 * if (!methodGraph.containsVertex(methodName)) {
+			 * methodGraph.addVertex(methodName); if (!prevMethod.isEmpty()) {
+			 * if (!methodGraph.containsEdge(methodName, prevMethod)) {
+			 * this.methodGraph.addEdge(methodName, prevMethod); } } prevMethod
+			 * = methodName; }
+			 */
 
-			
 			if (!classGraph.containsVertex(className)) {
 				classGraph.addVertex(className);
 				if (!prevClass.isEmpty()) {
@@ -123,29 +126,59 @@ public class TraceElemExtractor {
 				prevClass = className;
 			}
 
-			//added extra module
+			// added extra module
 			if (!classGraph.containsVertex(methodName)) {
 				classGraph.addVertex(methodName);
-				if (!classGraph.containsEdge(methodName, className)) {
-					this.classGraph.addEdge(methodName, className);
-				}
-				if (!classGraph.containsEdge(className, methodName)) {
-					this.classGraph.addEdge(className,methodName);
-				}
-				
-				if (!prevMethod.isEmpty()) {
-					if (!classGraph.containsEdge(methodName, prevMethod)) {
-						this.classGraph.addEdge(methodName, prevMethod);
-					}
-					
-					/*if (!classGraph.containsEdge(methodName, prevClass)) {
-						this.classGraph.addEdge(methodName, prevClass);
-					}*/
-					
-				}
-				prevMethod = methodName;
 			}
 
+			if (!classGraph.containsEdge(methodName, className)) {
+				this.classGraph.addEdge(methodName, className);
+			}
+			if (!classGraph.containsEdge(className, methodName)) {
+				this.classGraph.addEdge(className, methodName);
+			}
+
+			if (!prevMethod.isEmpty()) {
+				if (!classGraph.containsEdge(methodName, prevMethod)) {
+					this.classGraph.addEdge(methodName, prevMethod);
+				}
+				// doesn't it improve?
+				/*
+				 * if (!classGraph.containsEdge(methodName, prevClass)) {
+				 * this.classGraph.addEdge(methodName, prevClass); }
+				 */
+			}
+			prevMethod = methodName;
+
+			tcount++;
+			if (tcount == StaticData.MAX_ST_ENTRY_LEN) {
+				break;
+			}
+		}
+	}
+
+	protected void expandTraceNodes() {
+		// expand trace nodes with individual nodes
+		HashSet<String> nodeSet = new HashSet<String>(
+				this.classGraph.vertexSet());
+		for (String key : nodeSet) {
+			ArrayList<String> tokens = MiscUtility.decomposeCamelCase(key);
+			if (tokens.size() > 1) {
+				StopWordManager stopManager = new StopWordManager();
+				ArrayList<String> refinedTokens = stopManager
+						.getRefinedList(tokens);
+				for (String refToken : refinedTokens) {
+					if (!this.classGraph.containsVertex(refToken)) {
+						this.classGraph.addVertex(refToken);
+					}
+					if (!this.classGraph.containsEdge(refToken, key)) {
+						this.classGraph.addEdge(refToken, key);
+					}
+					if (!this.classGraph.containsEdge(key, refToken)) {
+						this.classGraph.addEdge(key, refToken);
+					}
+				}
+			}
 		}
 	}
 

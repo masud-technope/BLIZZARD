@@ -132,7 +132,7 @@ public class ClassResultRankMgr {
 		return foundIndices;
 	}
 
-	protected ArrayList<Integer> getCorrectRanksDotted(int TOPK) {
+	public ArrayList<Integer> getCorrectRanksDotted(int TOPK) {
 		ArrayList<Integer> foundIndices = new ArrayList<>();
 		ArrayList<String> cgoldset = translate2Dotted(this.goldset);
 		this.results = translateResults(TOPK);

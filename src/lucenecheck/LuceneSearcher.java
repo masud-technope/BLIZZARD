@@ -56,19 +56,6 @@ public class LuceneSearcher {
 		this.goldset = new ArrayList<>();
 	}
 
-	public LuceneSearcher(int bugID, String repository, String searchQuery,
-			boolean stem) {
-		// initialization
-		this.bugID = bugID;
-		this.repository = repository;
-		// checking the class-based index
-		this.indexFolder = config.StaticData.BRICK_EXP + "/lucene/index-class"
-				+ (stem ? "-stem" : "") + "/" + repository;
-		this.searchQuery = searchQuery;
-		this.results = new ArrayList<>();
-		this.goldset = new ArrayList<>();
-	}
-
 	public LuceneSearcher(String indexFolder, String searchQuery) {
 		this.indexFolder = indexFolder;
 		this.searchQuery = searchQuery;
@@ -208,7 +195,10 @@ public class LuceneSearcher {
 		}
 		return foundIndices;
 	}
-
+	
+	
+	
+	
 	public int getFirstGoldRankClass() {
 		this.results = performVSMSearchList(true);
 		int foundIndex = -1;
