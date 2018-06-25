@@ -105,6 +105,21 @@ public class BLIZZARDResultProvider {
 		return resultMap;
 	}
 
+	public HashMap<Integer, ArrayList<String>> collectBLIZZARDResultsAll() {
+		// collect BLIZZARD results
+		System.out.println("Collection of results started. Please wait..");
+		HashMap<Integer, ArrayList<String>> resultMap = new HashMap<>();
+		for (int bugID : this.queryMap.keySet()) {
+			String singleQuery = this.queryMap.get(bugID);
+			LuceneSearcher searcher = new LuceneSearcher(bugID, repoName,
+					singleQuery);
+			ArrayList<String> ranked = searcher.performVSMSearchList(true);
+			resultMap.put(bugID, ranked);
+		}
+		System.out.println("Localization results collected successfully :-)");
+		return resultMap;
+	}
+	
 	public void calculateBLIZZARDPerformance(
 			HashMap<Integer, ArrayList<String>> resultMap) {
 		double sumRR = 0;
