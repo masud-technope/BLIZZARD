@@ -2,9 +2,11 @@ package core.items;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
 import utility.ContentWriter;
 import brick.query.BLIZZARDQueryManager;
 import brick.query.tester.BLIZZARDResultProvider;
+import brick.query.tester.ReportedPerformanceProvider;
 
 public class BLIZZARDRunner {
 
@@ -58,6 +60,7 @@ public class BLIZZARDRunner {
 			String queryFile = null;
 			String resultFile = null;
 			String bugIDFile = null;
+			String reportKey = null;
 			int topk = 10;
 
 			switch (task) {
@@ -113,15 +116,52 @@ public class BLIZZARDRunner {
 					System.out.println("Please enter your result file.");
 				}
 
-				if (!repoName.isEmpty() && !queryFile.isEmpty()
-						&& !resultFile.isEmpty()) {
-					BLIZZARDResultProvider bprovider = new BLIZZARDResultProvider(
-							repoName, topk, queryFile);
-					HashMap<Integer, ArrayList<String>> results = bprovider
-							.collectBLIZZARDResults();
-					bprovider.calculateBLIZZARDPerformance(results);
-					saveItemList(resultFile, results);
+				if (topk <= 10) {
+					if (!repoName.isEmpty() && !queryFile.isEmpty()
+							&& !resultFile.isEmpty()) {
+						BLIZZARDResultProvider bprovider = new BLIZZARDResultProvider(
+								repoName, topk, queryFile);
+						HashMap<Integer, ArrayList<String>> results = bprovider
+								.collectBLIZZARDResults();
+						bprovider.calculateBLIZZARDPerformance(results);
+						saveItemList(resultFile, results);
+					}
+				} else if (topk == 100000) {
+					if (!repoName.isEmpty() && !queryFile.isEmpty()
+							&& !resultFile.isEmpty()) {
+						BLIZZARDResultProvider bprovider = new BLIZZARDResultProvider(
+								repoName, topk, queryFile);
+						HashMap<Integer, ArrayList<String>> results = bprovider
+								.collectBLIZZARDResultsAll();
+						saveItemList(resultFile, results);
+					}
+				} else {
+					System.out.println("Please enter K<=10 or K=100000");
 				}
+				break;
+
+			case "getReportedBLPerformance":
+				if (keymap.containsKey("-reportKey")) {
+					reportKey = keymap.get("-reportKey");
+				}
+				if (keymap.containsKey("-topk")) {
+					topk = Integer.parseInt(keymap.get("-topk"));
+				} else {
+					System.out
+							.println("Please enter a Top-K value. Default Top-K = 10");
+				}
+				ReportedPerformanceProvider rpProvider = new ReportedPerformanceProvider(
+						reportKey);
+				rpProvider.determineRetrievalPerformance(topk);
+				break;
+
+			case "getReportedQEPerformance":
+				if (keymap.containsKey("-reportKey")) {
+					reportKey = keymap.get("-reportKey");
+				}
+				ReportedPerformanceProvider rpProvider2 = new ReportedPerformanceProvider(
+						reportKey);
+				rpProvider2.determineQE();
 				break;
 
 			default:

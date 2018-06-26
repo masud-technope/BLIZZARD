@@ -2,6 +2,7 @@ package brick.query.tester;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import lucenecheck.ClassResultRankMgr;
 import lucenecheck.LuceneSearcher;
@@ -76,7 +77,8 @@ public class BLIZZARDResultProvider {
 		double sumPrecision = 0;
 		if (foundIndices.isEmpty())
 			return 0;
-		for (int index : foundIndices) {
+		HashSet<Integer> uniquesIndices=new HashSet<Integer>(foundIndices);
+		for (int index : uniquesIndices) {
 			indexcount++;
 			double precision = (double) indexcount / index;
 			sumPrecision += precision;
