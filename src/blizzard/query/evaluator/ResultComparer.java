@@ -1,4 +1,4 @@
-package brick.query.tester;
+package blizzard.query.evaluator;
 
 import java.util.ArrayList;
 import java.util.HashMap;

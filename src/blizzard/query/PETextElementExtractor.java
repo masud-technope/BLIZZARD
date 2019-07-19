@@ -1,4 +1,4 @@
-package brick.query;
+package blizzard.query;
 
 import java.util.ArrayList;
 
@@ -6,19 +6,20 @@ import org.jgraph.graph.DefaultEdge;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
-public class TextElementExtractor {
+public class PETextElementExtractor {
 
 	String reportText;
 	DirectedGraph<String, DefaultEdge> textGraph = null;
 	int windowSize = 2;
 	ArrayList<String> sentences;
-
-	public TextElementExtractor(String reportText) {
+	
+	public PETextElementExtractor(String reportText)
+	{
 		this.reportText = reportText;
 		this.textGraph = new DefaultDirectedGraph<>(DefaultEdge.class);
 		this.sentences = getSentenceSet(this.reportText);
 	}
-
+	
 	public ArrayList<String> getSentenceSet(String content) {
 		// collecting individual sentences from a list
 		ArrayList<String> sentlist = new ArrayList<>();
@@ -33,7 +34,7 @@ public class TextElementExtractor {
 		return sentlist;
 	}
 
-	public DirectedGraph<String, DefaultEdge> developTextGraph() {
+	public DirectedGraph<String, DefaultEdge> developPETextGraph() {
 		// developing the word network
 		for (String sentence : this.sentences) {
 			String[] tokens = sentence.split("\\s+");
@@ -77,7 +78,7 @@ public class TextElementExtractor {
 		// returning the created graph
 		return textGraph;
 	}
-
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 	}

@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import utility.ContentWriter;
-import brick.query.BLIZZARDQueryManager;
-import brick.query.tester.BLIZZARDResultProvider;
-import brick.query.tester.ReportedPerformanceProvider;
+import blizzard.query.BLIZZARDQueryManager;
+import blizzard.query.evaluator.BLIZZARDResultProvider;
+import blizzard.query.evaluator.ReportedPerformanceProvider;
 
 public class BLIZZARDRunner {
 

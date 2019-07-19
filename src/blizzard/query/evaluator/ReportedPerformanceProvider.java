@@ -1,4 +1,4 @@
-package brick.query.tester;
+package blizzard.query.evaluator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +30,7 @@ public class ReportedPerformanceProvider {
 			sumHitK += brProvider.TopkAcc;
 			sumMAPK += brProvider.mapK;
 			sumMRR += brProvider.mrrK;
+			System.out.println(tempResults.size());
 			System.out.println();
 		}
 
